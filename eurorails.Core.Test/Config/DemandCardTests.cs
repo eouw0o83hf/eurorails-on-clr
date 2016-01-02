@@ -12,6 +12,17 @@ namespace eurorails.Core.Test.Config
     public class DemandCardTests
     {
         [Test]
+        public void DemandCardConfig_ShouldHaveIdsFrom1To146()
+        {
+            var count = DemandCards
+                        .Values
+                        .Select(a => a.CardId)
+                        .Distinct()
+                        .Count(a => a >= 1 && a <= 146);
+            Assert.That(count, Is.EqualTo(146));
+        }
+
+        [Test]
         public void DemandCardConfig_ShouldMatchResourceAndCityConfigs()
         {
             foreach (var card in DemandCards.Values)

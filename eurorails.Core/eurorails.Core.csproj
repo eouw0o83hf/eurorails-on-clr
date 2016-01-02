@@ -39,11 +39,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Card.cs" />
     <Compile Include="City.cs" />
     <Compile Include="Config\CityResources.cs" />
     <Compile Include="Config\DemandCards.cs" />
+    <Compile Include="Config\EventCards.cs" />
     <Compile Include="Config\ResourceCounts.cs" />
     <Compile Include="DemandCard.cs" />
+    <Compile Include="EventCard.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="Player.cs" />
