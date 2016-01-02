@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eurorails.Core", "eurorails.Core.csproj", "{7E58FFBC-CD2F-4381-9A67-56687E18F789}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eurorails.Core", "eurorails.Core\eurorails.Core.csproj", "{7E58FFBC-CD2F-4381-9A67-56687E18F789}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eurorails.Core.Test", "..\eurorails.Core.Test\eurorails.Core.Test.csproj", "{0F60B2E6-76BD-454E-8581-AE2ADBFF50AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eurorails.Core.Test", "eurorails.Core.Test\eurorails.Core.Test.csproj", "{0F60B2E6-76BD-454E-8581-AE2ADBFF50AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
