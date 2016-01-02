@@ -41,7 +41,9 @@
   <ItemGroup>
     <Compile Include="City.cs" />
     <Compile Include="Config\CityResources.cs" />
+    <Compile Include="Config\DemandCards.cs" />
     <Compile Include="Config\ResourceCounts.cs" />
+    <Compile Include="DemandCard.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="Player.cs" />
