@@ -32,7 +32,8 @@ namespace eurorails.ImageRecognition
             {
                 Mass = mass,
                 CentroidX = xAggregate / mass,
-                CentroidY = yAggregate / mass
+                CentroidY = yAggregate / mass,
+                OriginalBlob = blob
             };
 
             var radiusComponents = new List<double>();
@@ -71,5 +72,7 @@ namespace eurorails.ImageRecognition
         public double MedianRadius { get; set; }
         public double MeanPadding { get; set; }
         public double MedianPadding { get; set; }
+
+        public BlobContainer OriginalBlob { get; set; }
     }
 }

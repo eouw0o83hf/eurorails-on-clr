@@ -17,7 +17,7 @@ namespace eurorails.ImageRecognition
         public static double Median(this ICollection<double> input)
         {
             var midpoint = input.Count / 2;
-            if (input.Count % 2 == 1)
+            if (input.Count % 2 == 1 && input.Count > 1)
             {
                 ++midpoint;
             }

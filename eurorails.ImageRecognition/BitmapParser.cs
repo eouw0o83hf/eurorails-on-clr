@@ -15,13 +15,13 @@ namespace eurorails.ImageRecognition
                                                             bool errorOnBitmapOverrun = false)
         {
             var xLength = frameXLength ?? bitmap.Width;
-            var yLength = frameYLength ?? bitmap.Width;
+            var yLength = frameYLength ?? bitmap.Height;
             var xOffset = frameXOffset ?? 0;
             var yOffset = frameYOffset ?? 0;
 
-            for (var i = 0; i < xLength; ++i)
+            for (var i = 0; i < xLength - 1; ++i)
             {
-                for (var j = 0; j < yLength; ++j)
+                for (var j = 0; j < yLength - 1; ++j)
                 {
                     var location = new Point(i, j);
 
