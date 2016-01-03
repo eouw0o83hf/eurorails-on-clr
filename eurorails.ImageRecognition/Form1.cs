@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,24 +19,29 @@ namespace eurorails.ImageRecognition
         public Form1()
         {
             InitializeComponent();
-            
-            var inputImage = Image.FromFile(InputFolder + "board_min_1bit_inverted_cropped.bmp");
-            pictureBox1.Image = inputImage;
 
-            var nonBlackPixels = new List<Point>();
-            var bitmap = new Bitmap(inputImage);
+            var milepostSample = Path.Combine(InputFolder, "patch_milepostwithriver.bmp");
+            var milepostImage = Image.FromFile(milepostSample);
+            var milepostBitmap = new Bitmap(milepostImage);
+            var milepostFrame = new Frame(milepostBitmap, 0, 0, milepostBitmap.Width, milepostBitmap.Height);
+            milepostFrame.Process();
 
-            for (var i = 0; i < bitmap.Width; ++i)
-            {
-                for (var j = 0; j < bitmap.Height; ++j)
-                {
-                    var pixel = bitmap.GetPixel(i, j);
-                    if (pixel.GetBrightness() > 0.5)
-                    {
-                        nonBlackPixels.Add(new Point(i, j));
-                    }
-                }
-            }
+            var digets = new StringBuilder()
+                                .Append(Math.Round(milepostFrame.CentroidX, 3))
+                                .Append("\t")
+                                .Append(Math.Round(milepostFrame.CentroidY, 3))
+                                .Append("\t")
+                                .Append(milepostFrame.Mass)
+                                .Append("\t")
+                                .Append(Math.Round(milepostFrame.MeanPadding, 3))
+                                .Append("\t")
+                                .Append(milepostFrame.MedianPadding)
+                                .Append("\t")
+                                .Append(Math.Round(milepostFrame.MeanRadius, 3))
+                                .Append("\t")
+                                .Append(Math.Round(milepostFrame.MedianRadius, 3));
+
+            pictureBox1.Image = milepostImage;
         }
     }
 }

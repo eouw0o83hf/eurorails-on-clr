@@ -1,0 +1,6 @@
+Component	CentroidX	CentroidY	Mass	PaddingMean		PaddingMedian	RadiusMean	RadiusMedian
+Milepost	42.078		40.004		244		32.75			33.0			5.875		6.252
+Mountain	41.734		44.058		711		28.38			28.0			10.727		10.629
+Alpine		41.722		47.121		1145	22.239			22				17.945		16.993
+Small City	38.912		39.926		3676	18.192			17				22.809		24.165
+Medium City	37.704		38.112		4654	15.983			15				26.03		27.204
