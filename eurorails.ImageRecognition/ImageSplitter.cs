@@ -9,7 +9,7 @@ namespace eurorails.ImageRecognition
 {
     public static class ImageSplitter
     {
-        public static IEnumerable<BlobContainer> SplitToBlobs(this Bitmap bitmap)
+        public static ICollection<BlobContainer> SplitToBlobs(this Bitmap bitmap)
         {
             var nonEmptyPixels = bitmap.ParseBitmap()
                                        .Where(a => a.Color.TotalBrightness() > 0.5);
@@ -17,6 +17,8 @@ namespace eurorails.ImageRecognition
             var blobs = new List<BlobContainer>();
             foreach (var locus in nonEmptyPixels)
             {
+                Console.WriteLine("Parsing ({0}, {1})", locus.Location.X, locus.Location.Y);
+
                 var adjacentPoints = new List<Point>();
                 if (locus.Location.X > 0)
                 {
