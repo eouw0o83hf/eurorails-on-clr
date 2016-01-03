@@ -95,8 +95,8 @@ namespace eurorails.ImageRecognition
                 {
                     var xOffset = item.Value[i].OriginalBlob.Points.Min(a => a.Location.X);
                     var yOffset = item.Value[i].OriginalBlob.Points.Min(a => a.Location.Y);
-                    var length = item.Value[i].OriginalBlob.Points.Max(a => a.Location.X);
-                    var height = item.Value[i].OriginalBlob.Points.Max(a => a.Location.Y);
+                    var length = item.Value[i].OriginalBlob.Points.Max(a => a.Location.X) + 1;
+                    var height = item.Value[i].OriginalBlob.Points.Max(a => a.Location.Y) + 1;
 
                     Console.WriteLine("{0} of {1}: {2} x {3} pixels", i, item.Value.Count, length - xOffset, height - yOffset);
 
