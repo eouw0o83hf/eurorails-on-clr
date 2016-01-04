@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -20,9 +21,9 @@ namespace eurorails.ImageRecognition
                 new PatternMatcher
                 {
                     Name = "Milepost",
-                    MassMin = 225,
+                    MassMin = 125,
                     MassMax = 275,
-                    MeanRadiusMin = 5,
+                    MeanRadiusMin = 3.5,
                     MeanRadiusMax = 8
                 },
                 new PatternMatcher
@@ -36,9 +37,9 @@ namespace eurorails.ImageRecognition
                 new PatternMatcher
                 {
                     Name = "Alpine",
-                    MassMin = 1000,
+                    MassMin = 900,
                     MassMax = 1200,
-                    MeanRadiusMin = 15,
+                    MeanRadiusMin = 16,
                     MeanRadiusMax = 19
                 },
                 new PatternMatcher
@@ -56,6 +57,14 @@ namespace eurorails.ImageRecognition
                     MassMax = 5300,
                     MeanRadiusMin = 24,
                     MeanRadiusMax = 30
+                },
+                new PatternMatcher
+                {
+                    Name = "Major City",
+                    MassMin = 25000,
+                    MassMax = 50000,
+                    MeanRadiusMin = 70,
+                    MeanRadiusMax = 80
                 }
             };
 
@@ -63,8 +72,9 @@ namespace eurorails.ImageRecognition
             {
                 Name = "None"
             };
-
-            var bitmap = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "board_min_1bit_inverted_cropped.bmp")));
+            
+            var bitmap = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "board_min_1bit_inverted_cropped_2.bmp")));
+            //var bitmap = new Bitmap(Image.FromFile(Path.Combine(OutputFolder, "None_20.bmp")));
 
             Console.WriteLine("Loaded bitmap, splitting to Blobs");
 
@@ -86,6 +96,10 @@ namespace eurorails.ImageRecognition
             }
 
             Console.WriteLine("Done pattern matching, outputting blobs");
+            
+            var digests = new List<string>();
+
+            digests.Add("Item\tX\tY\tMass\tMeanRadius\tMedianRadius");
 
             foreach (var item in output)
             {
@@ -93,6 +107,24 @@ namespace eurorails.ImageRecognition
 
                 for (var i = 0; i < item.Value.Count; ++i)
                 {
+                    var message = new StringBuilder()
+                        .Append(item.Key.Name)
+                        .Append(i)
+                        .Append("\t")
+                        .Append(item.Value[i].CentroidX)
+                        .Append("\t")
+                        .Append(item.Value[i].CentroidY)
+                        .Append("\t")
+                        .Append(item.Value[i].Mass)
+                        .Append("\t")
+                        .Append(Math.Round(item.Value[i].MeanRadius, 3))
+                        .Append("\t")
+                        .Append(Math.Round(item.Value[i].MedianRadius, 3))
+                        .ToString();
+
+                    Console.WriteLine(message);
+                    digests.Add(message);
+
                     var xOffset = item.Value[i].OriginalBlob.Points.Min(a => a.Location.X);
                     var yOffset = item.Value[i].OriginalBlob.Points.Min(a => a.Location.Y);
                     var length = item.Value[i].OriginalBlob.Points.Max(a => a.Location.X) + 1;
@@ -105,24 +137,11 @@ namespace eurorails.ImageRecognition
                     {
                         outputBitmap.SetPixel(p.Location.X - xOffset, p.Location.Y - yOffset, p.Color);
                     }
-                    //for (var x = 0; x < length - xOffset; ++x)
-                    //{
-                    //    for (var y = 0; y < height - yOffset; ++y)
-                    //    {
-                    //        var pixel = item.Value[i].OriginalBlob.Points.FirstOrDefault(a => a.Location.X == x + xOffset && a.Location.Y == y + yOffset);
-                    //        if (pixel != null)
-                    //        {
-                    //            outputBitmap.SetPixel(x, y, pixel.Color);
-                    //        }
-                    //        else
-                    //        {
-                    //            outputBitmap.SetPixel(x, y, Color.Black);
-                    //        }
-                    //    }
-                    //}
                     outputBitmap.Save(Path.Combine(OutputFolder, item.Key.Name + "_" + i + ".bmp"));
                 }
             }
+
+            File.WriteAllLines(Path.Combine(OutputFolder, Guid.NewGuid().ToString() + ".txt"), digests);
 
             Console.WriteLine("Done!");
             Console.Read();

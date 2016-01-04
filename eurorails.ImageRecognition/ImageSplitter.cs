@@ -9,7 +9,7 @@ namespace eurorails.ImageRecognition
 {
     public static class ImageSplitter
     {
-        public static ICollection<BlobContainer> SplitToBlobs(this Bitmap bitmap)
+        public static ICollection<BlobContainer> SplitToBlobs(this Bitmap bitmap, int? minimumBlobMass = 3)
         {
             var nonEmptyPixels = bitmap.ParseBitmap()
                                        .Where(a => a.Color.TotalBrightness() > 0.5);
@@ -59,6 +59,11 @@ namespace eurorails.ImageRecognition
                     blobs.Add(targetBlob);
                 }
                 targetBlob.Points.Add(locus);
+            }
+
+            if (minimumBlobMass.HasValue)
+            {
+                blobs = blobs.Where(a => a.Points.Count > minimumBlobMass.Value).ToList();
             }
             return blobs;
         }
