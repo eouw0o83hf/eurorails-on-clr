@@ -15,6 +15,8 @@ namespace eurorails.ImageRecognition
                                        .Where(a => a.Color.TotalBrightness() > 0.5);
 
             var blobs = new List<BlobContainer>();
+            var blobMap = new Dictionary<Point, BlobContainer>();
+
             foreach (var locus in nonEmptyPixels)
             {
                 Console.WriteLine("Parsing ({0}, {1})", locus.Location.X, locus.Location.Y);
@@ -37,20 +39,33 @@ namespace eurorails.ImageRecognition
                     adjacentPoints.Add(new Point(locus.Location.X, locus.Location.Y + 1));
                 }
 
-                var matchingBlobs = blobs.Where(a => a.Points.Any(b => adjacentPoints.Contains(b.Location))).ToList();
+                var matchingBlobs = adjacentPoints
+                                    .Where(blobMap.ContainsKey)
+                                    .Select(a => blobMap[a])
+                                    .Distinct();
 
-
-                BlobContainer targetBlob;
-                if (matchingBlobs.Any())
+                BlobContainer targetBlob = null;
+                foreach (var m in matchingBlobs)
                 {
-                    targetBlob = matchingBlobs.First();
-                    foreach (var r in matchingBlobs.Skip(1))
+                    if (targetBlob == null)
                     {
-                        targetBlob.Points.AddRange(r.Points);
-                        blobs.Remove(r);
+                        targetBlob = m;
+                    }
+                    else
+                    {
+                        foreach (var l in m.Points)
+                        {
+                            if (targetBlob.Points.Contains(l))
+                            {
+                                Console.WriteLine("wtf");
+                            }
+                            targetBlob.Points.Add(l);
+                            blobMap[l.Location] = targetBlob;
+                            blobs.Remove(m);
+                        }
                     }
                 }
-                else
+                if (targetBlob == null)
                 {
                     targetBlob = new BlobContainer
                     {
@@ -59,11 +74,12 @@ namespace eurorails.ImageRecognition
                     blobs.Add(targetBlob);
                 }
                 targetBlob.Points.Add(locus);
+                blobMap[locus.Location] = targetBlob;
             }
 
             if (minimumBlobMass.HasValue)
             {
-                blobs = blobs.Where(a => a.Points.Count > minimumBlobMass.Value).ToList();
+                blobs.RemoveAll(a => a.Points.Count < minimumBlobMass.Value);
             }
             return blobs;
         }

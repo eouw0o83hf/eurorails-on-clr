@@ -22,7 +22,7 @@ namespace eurorails.ImageRecognition
                 {
                     Name = "Milepost",
                     MassMin = 125,
-                    MassMax = 275,
+                    MassMax = 300,
                     MeanRadiusMin = 3.5,
                     MeanRadiusMax = 8
                 },
@@ -72,8 +72,8 @@ namespace eurorails.ImageRecognition
             {
                 Name = "None"
             };
-            
-            var bitmap = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "board_min_1bit_inverted_cropped_2.bmp")));
+
+            var bitmap = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "board_min_1bit_inverted_cropped.bmp")));
             //var bitmap = new Bitmap(Image.FromFile(Path.Combine(OutputFolder, "None_20.bmp")));
 
             Console.WriteLine("Loaded bitmap, splitting to Blobs");
