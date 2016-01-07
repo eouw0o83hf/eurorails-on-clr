@@ -78,7 +78,7 @@ namespace eurorails.ImageRecognition
 
             Console.WriteLine("Loaded bitmap, splitting to Blobs");
 
-            var blobs = bitmap.SplitToBlobs();
+            var blobs = bitmap.SplitToBlobs(80);
 
             Console.WriteLine("Split to {0} Blobs", blobs.Count);
 
