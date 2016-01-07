@@ -22,7 +22,7 @@ namespace eurorails.ImageRecognition
                 {
                     Name = "Milepost",
                     MassMin = 125,
-                    MassMax = 300,
+                    MassMax = 310,
                     MeanRadiusMin = 3.5,
                     MeanRadiusMax = 8
                 },
@@ -30,7 +30,7 @@ namespace eurorails.ImageRecognition
                 {
                     Name = "Mountain",
                     MassMin = 600,
-                    MassMax = 850,
+                    MassMax = 900,
                     MeanRadiusMin = 9,
                     MeanRadiusMax = 12
                 },
