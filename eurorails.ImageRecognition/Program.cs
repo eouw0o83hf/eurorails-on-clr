@@ -17,7 +17,8 @@ namespace eurorails.ImageRecognition
         const string InputFolder = @"..\..\..\Images\";
         const string OutputFolder = @"..\..\..\Images\Output";
 
-        public static void Main(string[] args)
+        // Used to read an image into json config
+        public static void Main_VisionImageInput(string[] args)
         {
             var patterns = new[]
             {
@@ -190,6 +191,56 @@ namespace eurorails.ImageRecognition
             //}
 
             //pictureBox1.Image = milepostImage;
+        }
+
+        // Used to validate the json config and link mileposts
+        public static void Main(string[] args)
+        {
+            var milepostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_milepost.bmp")));
+            var smallCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_smallcity.bmp")));
+            var medCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mediumcity.bmp")));
+            var majorCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_majorcity.bmp")));
+            var mountainSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mountain.bmp")));
+            var alpineSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_alpine.bmp")));
+
+            var typeDictionary = new Dictionary<string, Bitmap>
+            {
+                {"Milepost", milepostSample},
+                {"Small City", smallCitySample},
+                {"Medium City", medCitySample},
+                {"Major City", majorCitySample},
+                {"Mountain", mountainSample},
+                {"Alpine", alpineSample}
+            };
+
+            var input = JsonConvert.DeserializeObject<List<SerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Mileposts.json")));
+            var output = new Bitmap((int)Math.Ceiling(input.Max(a => a.LocationX)), (int)Math.Ceiling(input.Max(a => a.LocationY)));
+
+            var index = 0;
+            foreach (var item in input)
+            {
+                Console.WriteLine("{0} of {1}", index++, input.Count);
+                var sample = typeDictionary[item.Type];
+
+                for (var i = 0; i < sample.Width; ++i)
+                {
+                    for (var j = 0; j < sample.Height; ++j)
+                    {
+                        // Assume these are reasonably centered
+                        var x = (i - (sample.Width / 2)) + (int)item.LocationX;
+                        var y = (j - (sample.Height / 2)) + (int)item.LocationY;
+
+                        if (x >= output.Width || y >= output.Height)
+                        {
+                            continue;
+                        }
+
+                        output.SetPixel(x, y, sample.GetPixel(i, j));
+                    }
+                }
+            }
+
+            output.Save(Path.Combine(OutputFolder, "rendered.bmp"));
         }
     }
 }
