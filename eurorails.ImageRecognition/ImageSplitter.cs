@@ -55,10 +55,6 @@ namespace eurorails.ImageRecognition
                     {
                         foreach (var l in m.Points)
                         {
-                            if (targetBlob.Points.Contains(l))
-                            {
-                                Console.WriteLine("wtf");
-                            }
                             targetBlob.Points.Add(l);
                             blobMap[l.Location] = targetBlob;
                             blobs.Remove(m);
