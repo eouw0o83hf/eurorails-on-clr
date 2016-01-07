@@ -22,14 +22,14 @@ namespace eurorails.ImageRecognition
                 {
                     Name = "Milepost",
                     MassMin = 125,
-                    MassMax = 310,
+                    MassMax = 340,
                     MeanRadiusMin = 3.5,
                     MeanRadiusMax = 8
                 },
                 new PatternMatcher
                 {
                     Name = "Mountain",
-                    MassMin = 600,
+                    MassMin = 350,
                     MassMax = 900,
                     MeanRadiusMin = 9,
                     MeanRadiusMax = 12
@@ -45,18 +45,18 @@ namespace eurorails.ImageRecognition
                 new PatternMatcher
                 {
                     Name = "Small City",
-                    MassMin = 3000,
-                    MassMax = 4000,
+                    MassMin = 2900,
+                    MassMax = 4010,
                     MeanRadiusMin = 20,
                     MeanRadiusMax = 25
                 },
                 new PatternMatcher
                 {
                     Name = "Medium City",
-                    MassMin = 4000,
+                    MassMin = 4010,
                     MassMax = 5300,
                     MeanRadiusMin = 24,
-                    MeanRadiusMax = 30
+                    MeanRadiusMax = 40
                 },
                 new PatternMatcher
                 {
@@ -96,44 +96,43 @@ namespace eurorails.ImageRecognition
             }
 
             Console.WriteLine("Done pattern matching, outputting blobs");
+
+            var digests = new List<string> {"Item\tX\tY\tMass\tMeanRadius\tMedianRadius"};
             
-            var digests = new List<string>();
-
-            digests.Add("Item\tX\tY\tMass\tMeanRadius\tMedianRadius");
-
             foreach (var item in output)
             {
                 Console.WriteLine("Outputting {0}", item.Key.Name);
 
-                for (var i = 0; i < item.Value.Count; ++i)
+                var sortedList = item.Value.OrderByDescending(a => a.Mass).ToList();
+                for (var i = 0; i < sortedList.Count; ++i)
                 {
                     var message = new StringBuilder()
                         .Append(item.Key.Name)
                         .Append(i)
                         .Append("\t")
-                        .Append(item.Value[i].CentroidX)
+                        .Append(sortedList[i].CentroidX)
                         .Append("\t")
-                        .Append(item.Value[i].CentroidY)
+                        .Append(sortedList[i].CentroidY)
                         .Append("\t")
-                        .Append(item.Value[i].Mass)
+                        .Append(sortedList[i].Mass)
                         .Append("\t")
-                        .Append(Math.Round(item.Value[i].MeanRadius, 3))
+                        .Append(Math.Round(sortedList[i].MeanRadius, 3))
                         .Append("\t")
-                        .Append(Math.Round(item.Value[i].MedianRadius, 3))
+                        .Append(Math.Round(sortedList[i].MedianRadius, 3))
                         .ToString();
 
                     Console.WriteLine(message);
                     digests.Add(message);
 
-                    var xOffset = item.Value[i].OriginalBlob.Points.Min(a => a.Location.X);
-                    var yOffset = item.Value[i].OriginalBlob.Points.Min(a => a.Location.Y);
-                    var length = item.Value[i].OriginalBlob.Points.Max(a => a.Location.X) + 1;
-                    var height = item.Value[i].OriginalBlob.Points.Max(a => a.Location.Y) + 1;
+                    var xOffset = sortedList[i].OriginalBlob.Points.Min(a => a.Location.X);
+                    var yOffset = sortedList[i].OriginalBlob.Points.Min(a => a.Location.Y);
+                    var length = sortedList[i].OriginalBlob.Points.Max(a => a.Location.X) + 1;
+                    var height = sortedList[i].OriginalBlob.Points.Max(a => a.Location.Y) + 1;
 
                     Console.WriteLine("{0} of {1}: {2} x {3} pixels", i, item.Value.Count, length - xOffset, height - yOffset);
 
                     var outputBitmap = new Bitmap(length - xOffset, height - yOffset);
-                    foreach (var p in item.Value[i].OriginalBlob.Points)
+                    foreach (var p in sortedList[i].OriginalBlob.Points)
                     {
                         outputBitmap.SetPixel(p.Location.X - xOffset, p.Location.Y - yOffset, p.Color);
                     }
