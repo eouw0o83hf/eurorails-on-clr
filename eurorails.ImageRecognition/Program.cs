@@ -6,6 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using eurorails.Core;
+using eurorails.Core.Config;
+using Newtonsoft.Json;
 
 namespace eurorails.ImageRecognition
 {
@@ -98,7 +101,8 @@ namespace eurorails.ImageRecognition
             Console.WriteLine("Done pattern matching, outputting blobs");
 
             var digests = new List<string> {"Item\tX\tY\tMass\tMeanRadius\tMedianRadius"};
-            
+            var board = new List<SerializedMilepost>();
+
             foreach (var item in output)
             {
                 Console.WriteLine("Outputting {0}", item.Key.Name);
@@ -137,8 +141,21 @@ namespace eurorails.ImageRecognition
                         outputBitmap.SetPixel(p.Location.X - xOffset, p.Location.Y - yOffset, p.Color);
                     }
                     outputBitmap.Save(Path.Combine(OutputFolder, item.Key.Name + "_" + i + ".bmp"));
+
+                    if (!item.Key.Name.Equals("none", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        board.Add(new SerializedMilepost
+                        {
+                            Type = item.Key.Name,
+                            LocationX = sortedList[i].CentroidX,
+                            LocationY = sortedList[i].CentroidY
+                        });
+                    }
                 }
             }
+
+            var serialized = JsonConvert.SerializeObject(board);
+            File.WriteAllText(Path.Combine(InputFolder, "Mileposts.json"), serialized);
 
             File.WriteAllLines(Path.Combine(OutputFolder, Guid.NewGuid().ToString() + ".txt"), digests);
 
