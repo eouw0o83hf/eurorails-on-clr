@@ -11,5 +11,15 @@ namespace eurorails.Core.Config
         public string Type { get; set; }
         public double LocationX { get; set; }
         public double LocationY { get; set; }
+
+        public List<SerializedMilepostConnection> Connections { get; set; }
+    }
+
+    public class SerializedMilepostConnection
+    {
+        public double Milepost1LocationX { get; set; }
+        public double Milepost1LocationY { get; set; }
+        public double Milepost2LocationX { get; set; }
+        public double Milepost2LocationY { get; set; }
     }
 }

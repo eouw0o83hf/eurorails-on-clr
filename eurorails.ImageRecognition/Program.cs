@@ -18,7 +18,7 @@ namespace eurorails.ImageRecognition
         const string OutputFolder = @"..\..\..\Images\Output";
 
         // Used to read an image into json config
-        public static void Main_VisionImageInput(string[] args)
+        public static void Main_Visualize(string[] args)
         {
             var patterns = new[]
             {
@@ -196,6 +196,8 @@ namespace eurorails.ImageRecognition
         // Used to validate the json config and link mileposts
         public static void Main(string[] args)
         {
+            const double milepostDistanceThreshold = 185;
+
             var milepostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_milepost.bmp")));
             var smallCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_smallcity.bmp")));
             var medCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mediumcity.bmp")));
@@ -212,14 +214,33 @@ namespace eurorails.ImageRecognition
                 {"Mountain", mountainSample},
                 {"Alpine", alpineSample}
             };
-
+            
             var input = JsonConvert.DeserializeObject<List<SerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Mileposts.json")));
-            var output = new Bitmap((int)Math.Ceiling(input.Max(a => a.LocationX)), (int)Math.Ceiling(input.Max(a => a.LocationY)));
+            var width = (int) Math.Ceiling(input.Max(a => a.LocationX));
+            var height = (int) Math.Ceiling(input.Max(a => a.LocationY));
 
-            var index = 0;
+            Console.WriteLine("Linking {0} mileposts", input.Count);
+
+            input = input
+                        //.Where(a => a.LocationX < 4559
+                        //            && a.LocationY < 774)
+                        //.Where(a => a.LocationX < 5500
+                        //            && a.LocationY < 3500)
+                        .OrderBy(a => a.LocationX)
+                        .ThenBy(a => a.LocationY)
+                        .ToList()
+                        .LinkMileposts(milepostDistanceThreshold);
+
+            var output = new Bitmap(width, height);
+            using (Graphics graph = Graphics.FromImage(output))
+            {
+                var ImageSize = new Rectangle(0, 0, output.Width, output.Height);
+                graph.FillRectangle(Brushes.Black, ImageSize);
+            }
+
+            Console.WriteLine("writing {0} mileposts", input.Count);
             foreach (var item in input)
             {
-                Console.WriteLine("{0} of {1}", index++, input.Count);
                 var sample = typeDictionary[item.Type];
 
                 for (var i = 0; i < sample.Width; ++i)
@@ -240,7 +261,39 @@ namespace eurorails.ImageRecognition
                 }
             }
 
-            output.Save(Path.Combine(OutputFolder, "rendered.bmp"));
+            Console.WriteLine("Generating paths for links");
+            var links = input
+                        .Where(a => a.Connections != null)
+                        .SelectMany(a => a.Connections)
+                        .Where(a => a != null)
+                        .Distinct()
+                        .SelectMany(GenerateLinkPoints)
+                        .Distinct()
+                        .ToList();
+            Console.WriteLine("writing {0} link points", links.Count);
+            foreach (var link in links)
+            {
+                output.SetPixel(link.X, link.Y, Color.Yellow);
+            }
+
+            output.Save(Path.Combine(InputFolder, "linked.bmp"));
+
+            Console.WriteLine("done");
+            Console.Read();
+        }
+
+        private static IEnumerable<Point> GenerateLinkPoints(SerializedMilepostConnection link)
+        {
+            var distance = Math.Sqrt(Math.Pow(link.Milepost1LocationX - link.Milepost2LocationX, 2) +
+                                     Math.Pow(link.Milepost1LocationY - link.Milepost2LocationY, 2));
+            var angle = Math.Asin((link.Milepost2LocationY - link.Milepost1LocationY) / distance);
+
+            for (var i = 0; i <= distance; ++i)
+            {
+                var x = link.Milepost1LocationX + (Math.Cos(angle) * i);
+                var y = link.Milepost1LocationY + (Math.Sin(angle) * i);
+                yield return new Point((int)x, (int)y);
+            }
         }
     }
 }
