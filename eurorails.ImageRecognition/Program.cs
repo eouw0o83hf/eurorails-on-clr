@@ -18,7 +18,7 @@ namespace eurorails.ImageRecognition
         const string OutputFolder = @"..\..\..\Images\Output";
 
         // Used to read an image into json config
-        public static void Main_Visualize(string[] args)
+        public static void Main_Load(string[] args)
         {
             var patterns = new[]
             {
@@ -161,6 +161,7 @@ namespace eurorails.ImageRecognition
             File.WriteAllLines(Path.Combine(OutputFolder, Guid.NewGuid().ToString() + ".txt"), digests);
 
             Console.WriteLine("Done!");
+
             Console.Read();
 
             //var milepostSample = Path.Combine(InputFolder, "patch_milepostwithriver.bmp");
@@ -196,7 +197,7 @@ namespace eurorails.ImageRecognition
         // Used to validate the json config and link mileposts
         public static void Main(string[] args)
         {
-            const double milepostDistanceThreshold = 185;
+            const double milepostDistanceThreshold = 170;
 
             var milepostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_milepost.bmp")));
             var smallCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_smallcity.bmp")));
