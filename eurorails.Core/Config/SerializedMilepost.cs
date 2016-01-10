@@ -23,4 +23,13 @@ namespace eurorails.Core.Config
         public Guid MilepostId1 { get; set; }
         public Guid MilepostId2 { get; set; }
     }
+
+    public class SerializedFerryConnection
+    {
+        public Guid MilepostId1 { get; set; }
+        public Guid MilepostId2 { get; set; }
+
+        public string FerryType { get; set; }
+        public int Cost { get; set; }
+    }
 }

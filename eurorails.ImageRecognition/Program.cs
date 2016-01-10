@@ -424,7 +424,7 @@ namespace eurorails.ImageRecognition
         }
 
         // Attach names
-        public static void Main(string[] args)
+        public static void Main_NameCities(string[] args)
         {
             var mileposts = JsonConvert.DeserializeObject<List<LinkedSerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Mileposts.json")));
 
@@ -547,6 +547,56 @@ namespace eurorails.ImageRecognition
 
 
             File.WriteAllText(Path.Combine(InputFolder, "Config_Mileposts_Named.json"), JsonConvert.SerializeObject(mileposts));
+        }
+
+        // Add ferries
+        public static void Main(string[] args)
+        {
+            var mileposts = JsonConvert.DeserializeObject<List<LinkedSerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Mileposts_Named.json")));
+            var links = JsonConvert.DeserializeObject<List<LinkedSerializedMilepostConnection>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Connections.json")));
+
+            var ferryListing = new[]
+            {
+                new {MilepostA = "c7a477c", MilepostB = "9f6f53d", Cost = 6},
+                new {MilepostA = "6a01ec0", MilepostB = "576b8de", Cost = 4},
+                new {MilepostA = "a487447", MilepostB = "a9cb92c", Cost = 4},
+                new {MilepostA = "6be07b1", MilepostB = "d365c80", Cost = 4},
+                new {MilepostA = "338a33a", MilepostB = "f3d8857", Cost = 4},
+                new {MilepostA = "67bca46", MilepostB = "6508e99", Cost = 4},
+                new {MilepostA = "d3e727b", MilepostB = "9b1eca3", Cost = 16},
+                new {MilepostA = "19084a1", MilepostB = "47ae5d3", Cost = 4},
+                new {MilepostA = "d124bb3", MilepostB = "f84ad3f", Cost = 4}
+            };
+            
+            var guidLookup = mileposts.ToDictionary(a => a.Id.ToString().Substring(0, 7), a => a);
+
+            var ferries = new List<SerializedFerryConnection>();
+            foreach (var f in ferryListing)
+            {
+                var milepostA = guidLookup[f.MilepostA].Id;
+                var milepostB = guidLookup[f.MilepostB].Id;
+                
+                ferries.Add(new SerializedFerryConnection
+                {
+                    MilepostId1 = milepostA,
+                    MilepostId2 = milepostB,
+                    Cost = f.Cost,
+                    FerryType = "Ferry"
+                });
+            }
+
+            // Chunnel
+            var chunnelTop = guidLookup["6d02295"].Id;
+            var chunnelBottom = guidLookup["c02075c"].Id;
+            ferries.Add(new SerializedFerryConnection
+            {
+                MilepostId1 = chunnelTop,
+                MilepostId2 = chunnelBottom,
+                Cost = 20,
+                FerryType = "Chunnel"
+            });
+
+            File.WriteAllText(Path.Combine(InputFolder, "Config_Ferries.json"), JsonConvert.SerializeObject(ferries));
         }
 
         private static IEnumerable<ContextualPoint> GenerateLinkPoints(LinkedSerializedMilepostConnection link)
