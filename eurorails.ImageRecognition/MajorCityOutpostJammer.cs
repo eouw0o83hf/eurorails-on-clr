@@ -30,7 +30,8 @@ namespace eurorails.ImageRecognition
                         Connections = new List<SerializedMilepostConnection>(),
                         LocationX = x,
                         LocationY = y,
-                        Type = "Major City Outpost"
+                        Type = "Major City Outpost",
+                        Id = Guid.NewGuid()
                     };
                 }
             }

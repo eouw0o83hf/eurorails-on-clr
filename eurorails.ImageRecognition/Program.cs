@@ -195,7 +195,7 @@ namespace eurorails.ImageRecognition
         }
 
         // Used to validate the json config and link mileposts
-        public static void Main(string[] args)
+        public static void Main_Link(string[] args)
         {
             const double milepostDistanceThreshold = 170;
             const double majorCityOutpostDistance = 123;
@@ -314,6 +314,130 @@ namespace eurorails.ImageRecognition
             Console.Read();
         }
 
+        //public static void Main(string[] args)
+        //{
+        //    var output = new Bitmap(50, 50);
+        //    using (var graph = Graphics.FromImage(output))
+        //    {
+        //        var ImageSize = new Rectangle(0, 0, output.Width, output.Height);
+        //        graph.FillRectangle(Brushes.Black, ImageSize);
+
+        //        graph.DrawString("abcdefg", new Font(FontFamily.GenericMonospace, 12), new SolidBrush(Color.Yellow),
+        //            new PointF(5, 5));
+        //    }
+        //    output.Save(Path.Combine(InputFolder, "test.bmp"));
+        //}
+
+        // Set us up to configure rivers, bays, etc.
+        public static void Main(string[] args)
+        {
+            Console.WriteLine("Loading");
+
+            var mileposts = JsonConvert.DeserializeObject<List<LinkedSerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Mileposts.json")));
+            var links = JsonConvert.DeserializeObject<List<LinkedSerializedMilepostConnection>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Connections.json")));
+
+            Console.WriteLine("Linking");
+
+            foreach (var l in links)
+            {
+                l.Milepost1 = mileposts.Single(a => a.Id == l.MilepostId1);
+                l.Milepost2 = mileposts.Single(a => a.Id == l.MilepostId2);
+
+                var m1 = (LinkedSerializedMilepost)l.Milepost1;
+                if (m1.Connections == null) m1.Connections = new List<SerializedMilepostConnection>();
+                m1.Connections.Add(l);
+
+                var m2 = (LinkedSerializedMilepost)l.Milepost2;
+                if (m2.Connections == null) m2.Connections = new List<SerializedMilepostConnection>();
+                m2.Connections.Add(l);
+            }
+
+            var width = (int)Math.Ceiling(mileposts.Max(a => a.LocationX));
+            var height = (int)Math.Ceiling(mileposts.Max(a => a.LocationY));
+
+            var output = new Bitmap(width, height);
+            using (var graph = Graphics.FromImage(output))
+            {
+                var ImageSize = new Rectangle(0, 0, output.Width, output.Height);
+                graph.FillRectangle(Brushes.Black, ImageSize);
+                
+                var milepostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_milepost.bmp")));
+                var smallCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_smallcity.bmp")));
+                var medCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mediumcity.bmp")));
+                var majorCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_majorcity.bmp")));
+                var mountainSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mountain.bmp")));
+                var alpineSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_alpine.bmp")));
+                var outpostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_outpost.bmp")));
+
+                var typeDictionary = new Dictionary<string, Bitmap>
+                {
+                    {"Milepost", milepostSample},
+                    {"Small City", smallCitySample},
+                    {"Medium City", medCitySample},
+                    {"Major City", majorCitySample},
+                    {"Mountain", mountainSample},
+                    {"Alpine", alpineSample},
+                    {"Major City Outpost", outpostSample}
+                };
+
+                Console.WriteLine("Rendering mileposts");
+
+                foreach (var item in mileposts)
+                {
+                    var sample = typeDictionary[item.Type];
+
+                    for (var i = 0; i < sample.Width; ++i)
+                    {
+                        for (var j = 0; j < sample.Height; ++j)
+                        {
+                            // Assume these are reasonably centered
+                            var x = (i - (sample.Width / 2)) + (int)item.LocationX;
+                            var y = (j - (sample.Height / 2)) + (int)item.LocationY;
+
+                            if (x >= output.Width || y >= output.Height)
+                            {
+                                continue;
+                            }
+
+                            var inputColor = sample.GetPixel(i, j);
+                            var newColor = Color.FromArgb(inputColor.A/2, inputColor.R, inputColor.G, inputColor.B);
+
+                            output.SetPixel(x, y, newColor);
+                        }
+                    }
+                }
+
+                foreach (var item in mileposts)
+                {
+                    graph.DrawString(item.Id.ToString().Substring(0, 7),
+                        new Font(FontFamily.GenericMonospace, 16), new SolidBrush(Color.LightGreen),
+                        new PointF((int)item.LocationX, (int)item.LocationY));
+                }
+
+                Console.WriteLine("Rendering link points");
+
+                var linkPoints = links
+                            .SelectMany(a => GenerateLinkPoints((LinkedSerializedMilepostConnection)a))
+                            .Distinct()
+                            .ToList();
+            
+                foreach (var link in linkPoints)
+                {
+                    output.SetPixel(link.Point.X, link.Point.Y, link.Color);
+                }
+            }
+            //var allGuids = mileposts.Select(a => a.Id)
+            //    .Concat(links.Select(a => a.Id))
+            //    .Select(a => a.ToString().Substring(0, 7)) // 7-length gives a short guid
+            //    .ToList();
+
+            output.Save(Path.Combine(InputFolder, "labeled.bmp"));
+
+
+            Console.WriteLine("Done");
+            Console.Read();
+        }
+        
         private static IEnumerable<ContextualPoint> GenerateLinkPoints(LinkedSerializedMilepostConnection link)
         {
             var distance = Math.Sqrt(Math.Pow(link.Milepost1.LocationX - link.Milepost2.LocationX, 2) +
