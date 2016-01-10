@@ -54,6 +54,8 @@
     <Compile Include="BitmapParser.cs" />
     <Compile Include="BlobAnalyzer.cs" />
     <Compile Include="ImageSplitter.cs" />
+    <Compile Include="LinkedSerializedMilepost.cs" />
+    <Compile Include="MajorCityOutpostJammer.cs" />
     <Compile Include="MilepostLinker.cs" />
     <Compile Include="PatternMatcher.cs" />
     <Compile Include="Program.cs" />

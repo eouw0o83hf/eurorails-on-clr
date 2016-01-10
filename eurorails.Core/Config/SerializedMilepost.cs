@@ -8,18 +8,18 @@ namespace eurorails.Core.Config
 {
     public class SerializedMilepost
     {
+        public Guid Id { get; set; }
+
         public string Type { get; set; }
         public double LocationX { get; set; }
         public double LocationY { get; set; }
-
-        public List<SerializedMilepostConnection> Connections { get; set; }
     }
 
     public class SerializedMilepostConnection
     {
-        public double Milepost1LocationX { get; set; }
-        public double Milepost1LocationY { get; set; }
-        public double Milepost2LocationX { get; set; }
-        public double Milepost2LocationY { get; set; }
+        public Guid Id { get; set; }
+
+        public Guid MilepostId1 { get; set; }
+        public Guid MilepostId2 { get; set; }
     }
 }

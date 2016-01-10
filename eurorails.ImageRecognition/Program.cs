@@ -198,6 +198,7 @@ namespace eurorails.ImageRecognition
         public static void Main(string[] args)
         {
             const double milepostDistanceThreshold = 170;
+            const double majorCityOutpostDistance = 123;
 
             var milepostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_milepost.bmp")));
             var smallCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_smallcity.bmp")));
@@ -205,6 +206,7 @@ namespace eurorails.ImageRecognition
             var majorCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_majorcity.bmp")));
             var mountainSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mountain.bmp")));
             var alpineSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_alpine.bmp")));
+            var outpostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_outpost.bmp")));
 
             var typeDictionary = new Dictionary<string, Bitmap>
             {
@@ -213,20 +215,22 @@ namespace eurorails.ImageRecognition
                 {"Medium City", medCitySample},
                 {"Major City", majorCitySample},
                 {"Mountain", mountainSample},
-                {"Alpine", alpineSample}
+                {"Alpine", alpineSample},
+                {"Major City Outpost", outpostSample}
             };
+
+            var input = JsonConvert
+                .DeserializeObject<List<LinkedSerializedMilepost>>(
+                    File.ReadAllText(Path.Combine(InputFolder, "Mileposts.json")));
+            input.ForEach(a => a.Id = Guid.NewGuid());
             
-            var input = JsonConvert.DeserializeObject<List<SerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Mileposts.json")));
             var width = (int) Math.Ceiling(input.Max(a => a.LocationX));
             var height = (int) Math.Ceiling(input.Max(a => a.LocationY));
 
             Console.WriteLine("Linking {0} mileposts", input.Count);
 
             input = input
-                        //.Where(a => a.LocationX < 4559
-                        //            && a.LocationY < 774)
-                        //.Where(a => a.LocationX < 5500
-                        //            && a.LocationY < 3500)
+                        .AddMajorCityOutposts(majorCityOutpostDistance)
                         .OrderBy(a => a.LocationX)
                         .ThenBy(a => a.LocationY)
                         .ToList()
@@ -268,33 +272,68 @@ namespace eurorails.ImageRecognition
                         .SelectMany(a => a.Connections)
                         .Where(a => a != null)
                         .Distinct()
-                        .SelectMany(GenerateLinkPoints)
+                        .SelectMany(a => GenerateLinkPoints((LinkedSerializedMilepostConnection)a))
                         .Distinct()
                         .ToList();
             Console.WriteLine("writing {0} link points", links.Count);
             foreach (var link in links)
             {
-                output.SetPixel(link.X, link.Y, Color.Yellow);
+                output.SetPixel(link.Point.X, link.Point.Y, link.Color);
             }
 
             output.Save(Path.Combine(InputFolder, "linked.bmp"));
+
+            //var shortestConnections = input
+            //    .Where(a => a.Connections != null)
+            //    .SelectMany(a => a.Connections.Cast<LinkedSerializedMilepostConnection>())
+            //    .Where(a => a != null)
+            //    .Select(a => new
+            //    {
+            //        Distance = Math.Sqrt(
+            //        Math.Pow(a.Milepost1.LocationX - a.Milepost2.LocationX, 2) +
+            //        Math.Pow(a.Milepost2.LocationY - a.Milepost2.LocationY, 2)),
+            //        Link = a
+            //    })
+            //    .OrderBy(a => a.Distance)
+            //    .Take(10);
+
+            //foreach (var s in shortestConnections)
+            //{
+            //    Console.WriteLine("Distance: {0} between {1},{2} and {3}{4}", s.Distance, s.Link.Milepost1.LocationX,
+            //        s.Link.Milepost1.LocationY, s.Link.Milepost2.LocationX, s.Link.Milepost2.LocationY);
+            //}
+            
+            File.WriteAllText(Path.Combine(InputFolder, "Config_Mileposts.json"), JsonConvert.SerializeObject(input));
+            var connections = input
+                .SelectMany(a => a.Connections)
+                .Distinct()
+                .ToList();
+            File.WriteAllText(Path.Combine(InputFolder, "Config_Connections.json"), JsonConvert.SerializeObject(connections));
 
             Console.WriteLine("done");
             Console.Read();
         }
 
-        private static IEnumerable<Point> GenerateLinkPoints(SerializedMilepostConnection link)
+        private static IEnumerable<ContextualPoint> GenerateLinkPoints(LinkedSerializedMilepostConnection link)
         {
-            var distance = Math.Sqrt(Math.Pow(link.Milepost1LocationX - link.Milepost2LocationX, 2) +
-                                     Math.Pow(link.Milepost1LocationY - link.Milepost2LocationY, 2));
-            var angle = Math.Asin((link.Milepost2LocationY - link.Milepost1LocationY) / distance);
+            var distance = Math.Sqrt(Math.Pow(link.Milepost1.LocationX - link.Milepost2.LocationX, 2) +
+                                     Math.Pow(link.Milepost1.LocationY - link.Milepost2.LocationY, 2));
+            var angle = Math.Asin((link.Milepost2.LocationY - link.Milepost1.LocationY) / distance);
 
             for (var i = 0; i <= distance; ++i)
             {
-                var x = link.Milepost1LocationX + (Math.Cos(angle) * i);
-                var y = link.Milepost1LocationY + (Math.Sin(angle) * i);
-                yield return new Point((int)x, (int)y);
+                var x = link.Milepost1.LocationX + (Math.Cos(angle) * i);
+                var y = link.Milepost1.LocationY + (Math.Sin(angle) * i);
+                var color = link.Milepost1.Type == "Major City Outpost" || link.Milepost2.Type == "Major City Outpost" ?
+                    Color.Aqua : Color.Yellow;
+                yield return new ContextualPoint {Point = new Point((int) x, (int) y), Color = color};
             }
+        }
+
+        private class ContextualPoint
+        {
+            public Point Point { get; set; }
+            public Color Color { get; set; }
         }
     }
 }

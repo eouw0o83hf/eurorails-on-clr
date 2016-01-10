@@ -9,7 +9,7 @@ namespace eurorails.ImageRecognition
 {
     public static class MilepostLinker
     {
-        public static List<SerializedMilepost> LinkMileposts(this List<SerializedMilepost> mileposts, double milepostThreshold)
+        public static List<LinkedSerializedMilepost> LinkMileposts(this List<LinkedSerializedMilepost> mileposts, double milepostThreshold)
         {
             for (var i = 0; i < mileposts.Count - 1; ++i)
             {
@@ -20,12 +20,13 @@ namespace eurorails.ImageRecognition
 
                     if (distance < milepostThreshold)
                     {
-                        var link = new SerializedMilepostConnection
+                        var link = new LinkedSerializedMilepostConnection
                         {
-                            Milepost1LocationX = mileposts[i].LocationX,
-                            Milepost1LocationY = mileposts[i].LocationY,
-                            Milepost2LocationX = mileposts[j].LocationX,
-                            Milepost2LocationY = mileposts[j].LocationY
+                            Milepost1 = mileposts[i],
+                            Milepost2 = mileposts[j],
+                            MilepostId1 = mileposts[i].Id,
+                            MilepostId2 = mileposts[j].Id,
+                            Id = Guid.NewGuid()
                         };
 
                         mileposts[i].AddConnection(link);
@@ -37,7 +38,7 @@ namespace eurorails.ImageRecognition
             return mileposts;
         }
 
-        private static void AddConnection(this SerializedMilepost milepost, SerializedMilepostConnection connection)
+        private static void AddConnection(this LinkedSerializedMilepost milepost, LinkedSerializedMilepostConnection connection)
         {
             if (milepost.Connections == null)
             {
