@@ -46,6 +46,7 @@
     <Compile Include="Config\DemandCards.cs" />
     <Compile Include="Config\EventCards.cs" />
     <Compile Include="Config\ResourceCounts.cs" />
+    <Compile Include="Config\SerializedMilepost.cs" />
     <Compile Include="DemandCard.cs" />
     <Compile Include="EventCard.cs" />
     <Compile Include="Game.cs" />

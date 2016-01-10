@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eurorails.Core", "eurorails.Core\eurorails.Core.csproj", "{7E58FFBC-CD2F-4381-9A67-56687E18F789}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eurorails.Core.Test", "eurorails.Core.Test\eurorails.Core.Test.csproj", "{0F60B2E6-76BD-454E-8581-AE2ADBFF50AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eurorails.ImageRecognition", "eurorails.ImageRecognition\eurorails.ImageRecognition.csproj", "{860573CF-52E2-479D-93D2-F4FBCEFCAE63}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{0F60B2E6-76BD-454E-8581-AE2ADBFF50AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0F60B2E6-76BD-454E-8581-AE2ADBFF50AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0F60B2E6-76BD-454E-8581-AE2ADBFF50AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{860573CF-52E2-479D-93D2-F4FBCEFCAE63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{860573CF-52E2-479D-93D2-F4FBCEFCAE63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{860573CF-52E2-479D-93D2-F4FBCEFCAE63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{860573CF-52E2-479D-93D2-F4FBCEFCAE63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
