@@ -314,22 +314,7 @@ namespace eurorails.ImageRecognition
             Console.Read();
         }
 
-        //public static void Main(string[] args)
-        //{
-        //    var output = new Bitmap(50, 50);
-        //    using (var graph = Graphics.FromImage(output))
-        //    {
-        //        var ImageSize = new Rectangle(0, 0, output.Width, output.Height);
-        //        graph.FillRectangle(Brushes.Black, ImageSize);
-
-        //        graph.DrawString("abcdefg", new Font(FontFamily.GenericMonospace, 12), new SolidBrush(Color.Yellow),
-        //            new PointF(5, 5));
-        //    }
-        //    output.Save(Path.Combine(InputFolder, "test.bmp"));
-        //}
-
-        // Set us up to configure rivers, bays, etc.
-        public static void Main(string[] args)
+        public static void Main_Named(string[] args)
         {
             Console.WriteLine("Loading");
 
@@ -437,7 +422,133 @@ namespace eurorails.ImageRecognition
             Console.WriteLine("Done");
             Console.Read();
         }
-        
+
+        // Attach names
+        public static void Main(string[] args)
+        {
+            var mileposts = JsonConvert.DeserializeObject<List<LinkedSerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Mileposts.json")));
+
+            var cityListing = new Dictionary<string, string>
+            {
+                {"540c262","Cork"},
+                {"9f6f53d","Dublin"},
+                {"6a01ec0","Belfast"},
+                {"6d2adef","Aberdeen"},
+                {"9be41f9","Glasgow"},
+                {"279124e","Newcastle"},
+                {"7251b8a","Manchester"},
+                {"35a9341","Birmingham"},
+                {"ac05b3b","Cardiff"},
+                {"bfa9bd5","London"},
+                {"a47479d","London"},
+                {"fbff058","London"},
+                {"fa1f6e9","London"},
+                {"97217b0","London"},
+                {"49dff88","London"},
+                {"74f8649","London"},
+                {"271983b","Holland"},
+                {"c1c9ea4","Holland"},
+                {"b956374","Holland"},
+                {"ea4f99a","Holland"},
+                {"39b2c86","Holland"},
+                {"72453d3","Holland"},
+                {"5f629dc","Holland"},
+                {"4c32d05","Antwerpen"},
+                {"052e89c","Bruxelles"},
+                {"e6c72a5","Ruhr"},
+                {"82d0a9d","Ruhr"},
+                {"7ba5862","Ruhr"},
+                {"a099089","Ruhr"},
+                {"37f5705","Ruhr"},
+                {"5af7d63","Ruhr"},
+                {"c6fbacd","Ruhr"},
+                {"5db635a","Paris"},
+                {"0ce8719","Paris"},
+                {"506a6dc","Paris"},
+                {"7e16f13","Paris"},
+                {"da04f55","Paris"},
+                {"76101c6","Paris"},
+                {"98401d9","Paris"},
+                {"82e94a3","Luxemborg"},
+                {"96260b3","Frankfurt"},
+                {"4846a46","Bremen"},
+                {"959c61b","Hamburg"},
+                {"4a6541f","Arhus"},
+                {"723557d","Kobenhavn"},
+                {"3c3ad6e","Goteborg"},
+                {"a4e4747","Stockholm"},
+                {"0c40850","Oslo"},
+                {"d81dd0c","Szczecin"},
+                {"7b662fd","Kaliningrad"},
+                {"dca0c49","Warszawa"},
+                {"dc9abc6","Lodz"},
+                {"c6c843e","Wroclaw"},
+                {"50c2f1d","Berlin"},
+                {"8f366c5","Berlin"},
+                {"381ece1","Berlin"},
+                {"15b9756","Berlin"},
+                {"6674389","Berlin"},
+                {"be998b3","Berlin"},
+                {"c27cdab","Berlin"},
+                {"46f414d","Leipzig"},
+                {"36dc56e","Praha"},
+                {"956de1b","Krakow"},
+                {"7fe6898","Budapest"},
+                {"f96e410","Beograd"},
+                {"ea49212","Sarajevo"},
+                {"6337cf7","Zagreb"},
+                {"d6e876c","Wien"},
+                {"fdd2d8b","Wien"},
+                {"b46cf3a","Wien"},
+                {"e191541","Wien"},
+                {"f167313","Wien"},
+                {"0ec8537","Wien"},
+                {"3c6beeb","Wien"},
+                {"7d1fbaa","Munchen"},
+                {"2873895","Venezia"},
+                {"40fe227","Florenze"},
+                {"75cdbf5","Roma"},
+                {"c5b8072","Milano"},
+                {"d3a289e","Milano"},
+                {"fe920fa","Milano"},
+                {"ae446a0","Milano"},
+                {"afe8dd1","Milano"},
+                {"7f9ac9f","Milano"},
+                {"5b1dac8","Milano"},
+                {"cbdd857","Zurich"},
+                {"6658cfa","Bern"},
+                {"6dd37d3","Stuttgart"},
+                {"93069c2","Torino"},
+                {"6283e30","Lyon"},
+                {"5c6860b","Marseille"},
+                {"fb6b8ea","Barcelona"},
+                {"4b37080","Toulouse"},
+                {"a26f093","Bordeaux"},
+                {"bdbc129","Nantes"},
+                {"159f47c","Bilbao"},
+                {"9899e3c","Valencia"},
+                {"f3e6fc6","Madrid"},
+                {"21ddfb1","Madrid"},
+                {"90aefe2","Madrid"},
+                {"dea2684","Madrid"},
+                {"9960f30","Madrid"},
+                {"ff1d9af","Madrid"},
+                {"b0f4d8e","Madrid"},
+                {"9aafb77","Porto"},
+                {"fb25431","Lisboa"},
+                {"050e6a8","Sevilla"}
+            };
+
+            var guidLookup = mileposts.ToDictionary(a => a.Id.ToString().Substring(0, 7), a => a);
+            foreach (var a in cityListing)
+            {
+                guidLookup[a.Key].Name = a.Value;
+            }
+
+
+            File.WriteAllText(Path.Combine(InputFolder, "Config_Mileposts_Named.json"), JsonConvert.SerializeObject(mileposts));
+        }
+
         private static IEnumerable<ContextualPoint> GenerateLinkPoints(LinkedSerializedMilepostConnection link)
         {
             var distance = Math.Sqrt(Math.Pow(link.Milepost1.LocationX - link.Milepost2.LocationX, 2) +

@@ -11,6 +11,7 @@ namespace eurorails.Core.Config
         public Guid Id { get; set; }
 
         public string Type { get; set; }
+        public string Name { get; set; }
         public double LocationX { get; set; }
         public double LocationY { get; set; }
     }
