@@ -25,5 +25,25 @@ namespace eurorails.Core.Test.Config
                 }
             }
         }
+
+        [Test]
+        public void Connections_ShouldMatchMileposts()
+        {
+            foreach (var c in Connections.Values)
+            {
+                Assert.That(Mileposts.Values.Any(a => a.Id == c.MilepostId1));
+                Assert.That(Mileposts.Values.Any(a => a.Id == c.MilepostId2));
+            }
+        }
+
+        [Test]
+        public void Ferries_ShouldMatchMileposts()
+        {
+            foreach (var f in Ferries.Values)
+            {
+                Assert.That(Mileposts.Values.Any(a => a.Id == f.MilepostId1));
+                Assert.That(Mileposts.Values.Any(a => a.Id == f.MilepostId2));
+            }
+        }
     }
 }

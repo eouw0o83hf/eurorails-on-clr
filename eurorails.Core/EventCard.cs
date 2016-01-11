@@ -92,7 +92,7 @@ namespace eurorails.Core
 
     public class LongshoremanStrikeEventCard : EventCard
     {
-        // No train may pick up from or deliver to any city within 3 mileposts of any cost
+        // No train may pick up from or deliver to any city within 3 mileposts of any coast
 
         public LongshoremanStrikeEventCard()
             : base(148) { }
