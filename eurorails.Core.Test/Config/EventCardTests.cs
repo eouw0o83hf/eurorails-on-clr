@@ -48,5 +48,46 @@ namespace eurorails.Core.Test.Config
                 }
             }
         }
+
+        [Test]
+        public void EventCardConfig_FloodCards_ShouldMatchConnectionRiverNames()
+        {
+            var cards = EventCards
+                .Values
+                .OfType<FloodEventCard>();
+            var connectionRivers = Connections
+                .Values
+                .Where(a => a.RiversCrossed != null)
+                .SelectMany(a => a.RiversCrossed)
+                .Distinct()
+                .ToList();
+
+            foreach (var c in cards)
+            {
+                CollectionAssert.Contains(connectionRivers, c.RiverName);
+            }
+        }
+
+        [Test]
+        public void EventCardConfig_GalesCards_ShouldMatchMilepostBodyOfWaterNames()
+        {
+            var cards = EventCards
+                .Values
+                .OfType<GalesEventCard>();
+            var bodiesOfWater = Mileposts
+                .Values
+                .Where(a => !string.IsNullOrWhiteSpace(a.Ocean))
+                .Select(a => a.Ocean)
+                .Distinct()
+                .ToList();
+
+            foreach (var c in cards)
+            {
+                foreach (var b in c.BodiesOfWater)
+                {
+                    CollectionAssert.Contains(bodiesOfWater, b);
+                }
+            }
+        }
     }
 }

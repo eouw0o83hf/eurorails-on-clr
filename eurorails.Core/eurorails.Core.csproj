@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -45,6 +49,7 @@
     <Compile Include="Config\CityResources.cs" />
     <Compile Include="Config\DemandCards.cs" />
     <Compile Include="Config\EventCards.cs" />
+    <Compile Include="Config\Mileposts.cs" />
     <Compile Include="Config\ResourceCounts.cs" />
     <Compile Include="Config\SerializedMilepost.cs" />
     <Compile Include="DemandCard.cs" />
@@ -60,9 +65,12 @@
     <Compile Include="Turn.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Config\Config_Connections_Rivers.json" />
+    <EmbeddedResource Include="Config\Config_Connections.json" />
     <EmbeddedResource Include="Config\Config_Ferries.json" />
-    <EmbeddedResource Include="Config\Config_Mileposts_Named_Oceans.json" />
+    <EmbeddedResource Include="Config\Config_Mileposts.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
