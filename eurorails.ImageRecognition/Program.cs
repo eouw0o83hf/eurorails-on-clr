@@ -678,7 +678,7 @@ namespace eurorails.ImageRecognition
         }
 
         // Load rivers
-        public static void Main(string[] args)
+        public static void Main_Waterworks(string[] args)
         {
             Console.WriteLine("Configurating");
 
@@ -825,6 +825,139 @@ namespace eurorails.ImageRecognition
             Console.Read();
         }
 
+        // Output the whole thing
+        public static void Main(string[] args)
+        {
+            var mileposts = Mileposts.Values;
+            var links = Connections.Values;
+            var ferries = Ferries.Values;
+
+            var width = (int)Math.Ceiling(mileposts.Max(a => a.LocationX)) + 50;
+            var height = (int)Math.Ceiling(mileposts.Max(a => a.LocationY)) + 50;
+
+            var output = new Bitmap(width, height);
+            using (var graph = Graphics.FromImage(output))
+            {
+                var ImageSize = new Rectangle(0, 0, output.Width, output.Height);
+                graph.FillRectangle(Brushes.Black, ImageSize);
+            }
+
+            var milepostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_milepost.bmp")));
+            var smallCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_smallcity.bmp")));
+            var medCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mediumcity.bmp")));
+            var majorCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_majorcity.bmp")));
+            var mountainSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mountain.bmp")));
+            var alpineSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_alpine.bmp")));
+            var ferrySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_ferry.bmp")));
+
+            var typeDictionary = new Dictionary<string, Bitmap>
+            {
+                {"Milepost", milepostSample},
+                {"Small City", smallCitySample},
+                {"Medium City", medCitySample},
+                {"Major City", majorCitySample},
+                {"Mountain", mountainSample},
+                {"Alpine", alpineSample}
+            };
+
+            Console.WriteLine("Rendering mileposts");
+
+            //write mileposts
+            foreach (var item in mileposts)
+            {
+                if (!typeDictionary.ContainsKey(item.Type))
+                {
+                    continue;
+                }
+                var sample = typeDictionary[item.Type];
+
+                if (item.Type == "Milepost" &&
+                    ferries.Any(a => a.MilepostId1 == item.Id || a.MilepostId2 == item.Id))
+                {
+                    sample = ferrySample;
+                }
+
+                for (var i = 0; i < sample.Width; ++i)
+                {
+                    for (var j = 0; j < sample.Height; ++j)
+                    {
+                        // Assume these are reasonably centered
+                        var x = (i - (sample.Width / 2)) + (int)item.LocationX;
+                        var y = (j - (sample.Height / 2)) + (int)item.LocationY;
+
+                        if (x >= output.Width || y >= output.Height)
+                        {
+                            continue;
+                        }
+
+                        output.SetPixel(x, y, sample.GetPixel(i, j));
+                    }
+                }
+            }
+
+            Console.WriteLine("Rendering connections");
+            foreach (var l in links)
+            {
+                var milepost1 = mileposts.Single(a => a.Id == l.MilepostId1);
+                var milepost2 = mileposts.Single(a => a.Id == l.MilepostId2);
+
+                var linked = new LinkedSerializedMilepostConnection
+                {
+                    HasLakeOrInlet = l.HasLakeOrInlet,
+                    Id = l.Id,
+                    Milepost1 = milepost1,
+                    Milepost2 = milepost2,
+                    MilepostId1 = l.MilepostId1,
+                    MilepostId2 = l.MilepostId2,
+                    RiversCrossed = l.RiversCrossed
+                };
+
+                foreach (var p in GenerateLinkPoints(linked))
+                {
+                    output.SetPixel(p.Point.X, p.Point.Y, p.Color);
+                }
+            }
+
+            Console.WriteLine("Rendering ferries");
+            foreach (var f in ferries)
+            {
+                var milepost1 = mileposts.Single(a => a.Id == f.MilepostId1);
+                var milepost2 = mileposts.Single(a => a.Id == f.MilepostId2);
+
+                var linked = new LinkedSerializedMilepostConnection
+                {
+                    HasLakeOrInlet = false,
+                    Id = Guid.Empty,
+                    Milepost1 = milepost1,
+                    Milepost2 = milepost2,
+                    MilepostId1 = f.MilepostId1,
+                    MilepostId2 = f.MilepostId2,
+                    RiversCrossed = null
+                };
+
+                foreach (var p in GenerateLinkPoints(linked, true, f.FerryType == "Chunnel"))
+                {
+                    output.SetPixel(p.Point.X, p.Point.Y, p.Color);
+                }
+            }
+
+            Console.WriteLine("Rendering city names");
+            using (var graphics = Graphics.FromImage(output))
+            {
+                var font = new Font(FontFamily.GenericMonospace, 24, FontStyle.Bold);
+                var brush = new SolidBrush(Color.Red);
+                foreach (var m in mileposts.Where(a => !string.IsNullOrWhiteSpace(a.Name) && a.Type != "Major City Outpost"))
+                {
+                    var textSize = graphics.MeasureString(m.Name, font);
+                    graphics.DrawString(m.Name, font, brush, new PointF((float)m.LocationX - (textSize.Width / 2), (float)m.LocationY - (textSize.Height) / 2));
+                }
+            }
+
+            output.Save(Path.Combine(InputFolder, "finalexamp.bmp"));
+            Console.WriteLine("Done");
+            Console.Read();
+        }
+
         private static void LinkMilepostConnections(List<LinkedSerializedMilepost> mileposts, List<LinkedSerializedMilepostConnection> links)
         {
             foreach (var l in links)
@@ -843,18 +976,58 @@ namespace eurorails.ImageRecognition
             }
         }
 
-        private static IEnumerable<ContextualPoint> GenerateLinkPoints(LinkedSerializedMilepostConnection link)
+        private static IEnumerable<ContextualPoint> GenerateLinkPoints(LinkedSerializedMilepostConnection link,
+                                                                        bool isFerry = false, bool isChunnel = false)
         {
             var distance = Math.Sqrt(Math.Pow(link.Milepost1.LocationX - link.Milepost2.LocationX, 2) +
                                      Math.Pow(link.Milepost1.LocationY - link.Milepost2.LocationY, 2));
             var angle = Math.Asin((link.Milepost2.LocationY - link.Milepost1.LocationY) / distance);
 
+            // If it's negative, we need to reflect about the Y-axis
+            if (link.Milepost2.LocationX < link.Milepost1.LocationX)
+            {
+                angle = Math.PI - angle;
+            }
+
+            var handleRiver = link.RiversCrossed != null && link.RiversCrossed.Any();
+            var riverCount = 0;
+
             for (var i = 0; i <= distance; ++i)
             {
                 var x = link.Milepost1.LocationX + (Math.Cos(angle) * i);
                 var y = link.Milepost1.LocationY + (Math.Sin(angle) * i);
-                var color = link.Milepost1.Type == "Major City Outpost" || link.Milepost2.Type == "Major City Outpost" ?
-                    Color.Aqua : Color.Yellow;
+
+                var color = Color.LightGray;
+                if (handleRiver && i == distance / 2 - 1)
+                {
+                    for (var j = -2; j <= 2; ++j)
+                    {
+                        for(var k = -2; k <= 2; ++k)
+                        {
+                            yield return new ContextualPoint { Point = new Point((int)x + j, (int)y + k), Color = Color.LightSeaGreen };
+                        }
+                    }
+
+                    handleRiver = false;
+                    i += 2;
+                    continue;
+                }
+                if (link.HasLakeOrInlet)
+                {
+                    color = Color.LightSkyBlue;
+                }
+                if (isFerry)
+                {
+                    if (isChunnel)
+                    {
+                        color = Color.Yellow;
+                    }
+                    else
+                    {
+                        color = Color.LightGreen;
+                    }
+                }
+
                 yield return new ContextualPoint {Point = new Point((int) x, (int) y), Color = color};
             }
         }
