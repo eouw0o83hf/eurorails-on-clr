@@ -59,7 +59,11 @@
     <Compile Include="Train.cs" />
     <Compile Include="Turn.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Config\Config_Connections_Rivers.json" />
+    <EmbeddedResource Include="Config\Config_Ferries.json" />
+    <EmbeddedResource Include="Config\Config_Mileposts_Named_Oceans.json" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

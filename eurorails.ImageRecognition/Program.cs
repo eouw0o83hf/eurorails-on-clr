@@ -195,7 +195,7 @@ namespace eurorails.ImageRecognition
         }
 
         // Used to validate the json config and link mileposts
-        public static void Main(string[] args)
+        public static void Main_Link(string[] args)
         {
             const double milepostDistanceThreshold = 170;
             const double majorCityOutpostDistance = 123;
@@ -312,6 +312,535 @@ namespace eurorails.ImageRecognition
 
             Console.WriteLine("done");
             Console.Read();
+        }
+
+        public static void Main_Named(string[] args)
+        {
+            Console.WriteLine("Loading");
+
+            var mileposts = JsonConvert.DeserializeObject<List<LinkedSerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Mileposts.json")));
+            var links = JsonConvert.DeserializeObject<List<LinkedSerializedMilepostConnection>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Connections.json")));
+
+            Console.WriteLine("Linking");
+
+            foreach (var l in links)
+            {
+                l.Milepost1 = mileposts.Single(a => a.Id == l.MilepostId1);
+                l.Milepost2 = mileposts.Single(a => a.Id == l.MilepostId2);
+
+                var m1 = (LinkedSerializedMilepost)l.Milepost1;
+                if (m1.Connections == null) m1.Connections = new List<SerializedMilepostConnection>();
+                m1.Connections.Add(l);
+
+                var m2 = (LinkedSerializedMilepost)l.Milepost2;
+                if (m2.Connections == null) m2.Connections = new List<SerializedMilepostConnection>();
+                m2.Connections.Add(l);
+            }
+
+            var width = (int)Math.Ceiling(mileposts.Max(a => a.LocationX));
+            var height = (int)Math.Ceiling(mileposts.Max(a => a.LocationY));
+
+            var output = new Bitmap(width, height);
+            using (var graph = Graphics.FromImage(output))
+            {
+                var ImageSize = new Rectangle(0, 0, output.Width, output.Height);
+                graph.FillRectangle(Brushes.Black, ImageSize);
+                
+                var milepostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_milepost.bmp")));
+                var smallCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_smallcity.bmp")));
+                var medCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mediumcity.bmp")));
+                var majorCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_majorcity.bmp")));
+                var mountainSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mountain.bmp")));
+                var alpineSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_alpine.bmp")));
+                var outpostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_outpost.bmp")));
+
+                var typeDictionary = new Dictionary<string, Bitmap>
+                {
+                    {"Milepost", milepostSample},
+                    {"Small City", smallCitySample},
+                    {"Medium City", medCitySample},
+                    {"Major City", majorCitySample},
+                    {"Mountain", mountainSample},
+                    {"Alpine", alpineSample},
+                    {"Major City Outpost", outpostSample}
+                };
+
+                Console.WriteLine("Rendering mileposts");
+
+                foreach (var item in mileposts)
+                {
+                    var sample = typeDictionary[item.Type];
+
+                    for (var i = 0; i < sample.Width; ++i)
+                    {
+                        for (var j = 0; j < sample.Height; ++j)
+                        {
+                            // Assume these are reasonably centered
+                            var x = (i - (sample.Width / 2)) + (int)item.LocationX;
+                            var y = (j - (sample.Height / 2)) + (int)item.LocationY;
+
+                            if (x >= output.Width || y >= output.Height)
+                            {
+                                continue;
+                            }
+
+                            var inputColor = sample.GetPixel(i, j);
+                            var newColor = Color.FromArgb(inputColor.A/2, inputColor.R, inputColor.G, inputColor.B);
+
+                            output.SetPixel(x, y, newColor);
+                        }
+                    }
+                }
+
+                foreach (var item in mileposts)
+                {
+                    graph.DrawString(item.Id.ToString().Substring(0, 7),
+                        new Font(FontFamily.GenericMonospace, 16), new SolidBrush(Color.LightGreen),
+                        new PointF((int)item.LocationX, (int)item.LocationY));
+                }
+
+                Console.WriteLine("Rendering link points");
+
+                var linkPoints = links
+                            .SelectMany(a => GenerateLinkPoints((LinkedSerializedMilepostConnection)a))
+                            .Distinct()
+                            .ToList();
+            
+                foreach (var link in linkPoints)
+                {
+                    output.SetPixel(link.Point.X, link.Point.Y, link.Color);
+                }
+            }
+            //var allGuids = mileposts.Select(a => a.Id)
+            //    .Concat(links.Select(a => a.Id))
+            //    .Select(a => a.ToString().Substring(0, 7)) // 7-length gives a short guid
+            //    .ToList();
+
+            output.Save(Path.Combine(InputFolder, "labeled.bmp"));
+
+
+            Console.WriteLine("Done");
+            Console.Read();
+        }
+
+        // Attach names
+        public static void Main_NameCities(string[] args)
+        {
+            var mileposts = JsonConvert.DeserializeObject<List<LinkedSerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Mileposts.json")));
+
+            var cityListing = new Dictionary<string, string>
+            {
+                {"540c262","Cork"},
+                {"9f6f53d","Dublin"},
+                {"6a01ec0","Belfast"},
+                {"6d2adef","Aberdeen"},
+                {"9be41f9","Glasgow"},
+                {"279124e","Newcastle"},
+                {"7251b8a","Manchester"},
+                {"35a9341","Birmingham"},
+                {"ac05b3b","Cardiff"},
+                {"bfa9bd5","London"},
+                {"a47479d","London"},
+                {"fbff058","London"},
+                {"fa1f6e9","London"},
+                {"97217b0","London"},
+                {"49dff88","London"},
+                {"74f8649","London"},
+                {"271983b","Holland"},
+                {"c1c9ea4","Holland"},
+                {"b956374","Holland"},
+                {"ea4f99a","Holland"},
+                {"39b2c86","Holland"},
+                {"72453d3","Holland"},
+                {"5f629dc","Holland"},
+                {"4c32d05","Antwerpen"},
+                {"052e89c","Bruxelles"},
+                {"e6c72a5","Ruhr"},
+                {"82d0a9d","Ruhr"},
+                {"7ba5862","Ruhr"},
+                {"a099089","Ruhr"},
+                {"37f5705","Ruhr"},
+                {"5af7d63","Ruhr"},
+                {"c6fbacd","Ruhr"},
+                {"5db635a","Paris"},
+                {"0ce8719","Paris"},
+                {"506a6dc","Paris"},
+                {"7e16f13","Paris"},
+                {"da04f55","Paris"},
+                {"76101c6","Paris"},
+                {"98401d9","Paris"},
+                {"82e94a3","Luxemborg"},
+                {"96260b3","Frankfurt"},
+                {"4846a46","Bremen"},
+                {"959c61b","Hamburg"},
+                {"4a6541f","Arhus"},
+                {"723557d","Kobenhavn"},
+                {"3c3ad6e","Goteborg"},
+                {"a4e4747","Stockholm"},
+                {"0c40850","Oslo"},
+                {"d81dd0c","Szczecin"},
+                {"7b662fd","Kaliningrad"},
+                {"dca0c49","Warszawa"},
+                {"dc9abc6","Lodz"},
+                {"c6c843e","Wroclaw"},
+                {"50c2f1d","Berlin"},
+                {"8f366c5","Berlin"},
+                {"381ece1","Berlin"},
+                {"15b9756","Berlin"},
+                {"6674389","Berlin"},
+                {"be998b3","Berlin"},
+                {"c27cdab","Berlin"},
+                {"46f414d","Leipzig"},
+                {"36dc56e","Praha"},
+                {"956de1b","Krakow"},
+                {"7fe6898","Budapest"},
+                {"f96e410","Beograd"},
+                {"ea49212","Sarajevo"},
+                {"6337cf7","Zagreb"},
+                {"d6e876c","Wien"},
+                {"fdd2d8b","Wien"},
+                {"b46cf3a","Wien"},
+                {"e191541","Wien"},
+                {"f167313","Wien"},
+                {"0ec8537","Wien"},
+                {"3c6beeb","Wien"},
+                {"7d1fbaa","Munchen"},
+                {"2873895","Venezia"},
+                {"40fe227","Florenze"},
+                {"75cdbf5","Roma"},
+                {"c5b8072","Milano"},
+                {"d3a289e","Milano"},
+                {"fe920fa","Milano"},
+                {"ae446a0","Milano"},
+                {"afe8dd1","Milano"},
+                {"7f9ac9f","Milano"},
+                {"5b1dac8","Milano"},
+                {"cbdd857","Zurich"},
+                {"6658cfa","Bern"},
+                {"6dd37d3","Stuttgart"},
+                {"93069c2","Torino"},
+                {"6283e30","Lyon"},
+                {"5c6860b","Marseille"},
+                {"fb6b8ea","Barcelona"},
+                {"4b37080","Toulouse"},
+                {"a26f093","Bordeaux"},
+                {"bdbc129","Nantes"},
+                {"159f47c","Bilbao"},
+                {"9899e3c","Valencia"},
+                {"f3e6fc6","Madrid"},
+                {"21ddfb1","Madrid"},
+                {"90aefe2","Madrid"},
+                {"dea2684","Madrid"},
+                {"9960f30","Madrid"},
+                {"ff1d9af","Madrid"},
+                {"b0f4d8e","Madrid"},
+                {"9aafb77","Porto"},
+                {"fb25431","Lisboa"},
+                {"050e6a8","Sevilla"}
+            };
+
+            var guidLookup = mileposts.ToDictionary(a => a.Id.ToString().Substring(0, 7), a => a);
+            foreach (var a in cityListing)
+            {
+                guidLookup[a.Key].Name = a.Value;
+            }
+
+
+            File.WriteAllText(Path.Combine(InputFolder, "Config_Mileposts_Named.json"), JsonConvert.SerializeObject(mileposts));
+        }
+
+        // Add ferries
+        public static void Main_Ferries(string[] args)
+        {
+            var mileposts = JsonConvert.DeserializeObject<List<LinkedSerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Mileposts_Named.json")));
+            var links = JsonConvert.DeserializeObject<List<LinkedSerializedMilepostConnection>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Connections.json")));
+
+            var ferryListing = new[]
+            {
+                new {MilepostA = "c7a477c", MilepostB = "9f6f53d", Cost = 6},
+                new {MilepostA = "6a01ec0", MilepostB = "576b8de", Cost = 4},
+                new {MilepostA = "a487447", MilepostB = "a9cb92c", Cost = 4},
+                new {MilepostA = "6be07b1", MilepostB = "d365c80", Cost = 4},
+                new {MilepostA = "338a33a", MilepostB = "f3d8857", Cost = 4},
+                new {MilepostA = "67bca46", MilepostB = "6508e99", Cost = 4},
+                new {MilepostA = "d3e727b", MilepostB = "9b1eca3", Cost = 16},
+                new {MilepostA = "19084a1", MilepostB = "47ae5d3", Cost = 4},
+                new {MilepostA = "d124bb3", MilepostB = "f84ad3f", Cost = 4}
+            };
+            
+            var guidLookup = mileposts.ToDictionary(a => a.Id.ToString().Substring(0, 7), a => a);
+
+            var ferries = new List<SerializedFerryConnection>();
+            foreach (var f in ferryListing)
+            {
+                var milepostA = guidLookup[f.MilepostA].Id;
+                var milepostB = guidLookup[f.MilepostB].Id;
+                
+                ferries.Add(new SerializedFerryConnection
+                {
+                    MilepostId1 = milepostA,
+                    MilepostId2 = milepostB,
+                    Cost = f.Cost,
+                    FerryType = "Ferry"
+                });
+            }
+
+            // Chunnel
+            var chunnelTop = guidLookup["6d02295"].Id;
+            var chunnelBottom = guidLookup["c02075c"].Id;
+            ferries.Add(new SerializedFerryConnection
+            {
+                MilepostId1 = chunnelTop,
+                MilepostId2 = chunnelBottom,
+                Cost = 20,
+                FerryType = "Chunnel"
+            });
+
+            File.WriteAllText(Path.Combine(InputFolder, "Config_Ferries.json"), JsonConvert.SerializeObject(ferries));
+        }
+        
+        // Load all the other waterways
+        public static void Main_OutputMileposts(string[] args)
+        {
+            const double milepostDistanceThreshold = 170;
+            const double majorCityOutpostDistance = 123;
+
+            var milepostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_milepost.bmp")));
+            var smallCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_smallcity.bmp")));
+            var medCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mediumcity.bmp")));
+            var majorCitySample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_majorcity.bmp")));
+            var mountainSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_mountain.bmp")));
+            var alpineSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_alpine.bmp")));
+            var outpostSample = new Bitmap(Image.FromFile(Path.Combine(InputFolder, "patch_outpost.bmp")));
+
+            var typeDictionary = new Dictionary<string, Bitmap>
+            {
+                {"Milepost", milepostSample},
+                {"Small City", smallCitySample},
+                {"Medium City", medCitySample},
+                {"Major City", majorCitySample},
+                {"Mountain", mountainSample},
+                {"Alpine", alpineSample},
+                {"Major City Outpost", outpostSample}
+            };
+
+            var input = JsonConvert
+                .DeserializeObject<List<LinkedSerializedMilepost>>(
+                    File.ReadAllText(Path.Combine(InputFolder, "Mileposts.json")));
+            input.ForEach(a => a.Id = Guid.NewGuid());
+
+            var width = (int)Math.Ceiling(input.Max(a => a.LocationX));
+            var height = (int)Math.Ceiling(input.Max(a => a.LocationY));
+
+            Console.WriteLine("Linking {0} mileposts", input.Count);
+
+            input = input
+                        .AddMajorCityOutposts(majorCityOutpostDistance)
+                        .OrderBy(a => a.LocationX)
+                        .ThenBy(a => a.LocationY)
+                        .ToList()
+                        .LinkMileposts(milepostDistanceThreshold);
+
+            var output = new Bitmap(width, height);
+            using (Graphics graph = Graphics.FromImage(output))
+            {
+                var ImageSize = new Rectangle(0, 0, output.Width, output.Height);
+                graph.FillRectangle(Brushes.Black, ImageSize);
+            }
+
+            Console.WriteLine("writing {0} mileposts", input.Count);
+            foreach (var item in input)
+            {
+                var sample = typeDictionary[item.Type];
+
+                for (var i = 0; i < sample.Width; ++i)
+                {
+                    for (var j = 0; j < sample.Height; ++j)
+                    {
+                        // Assume these are reasonably centered
+                        var x = (i - (sample.Width / 2)) + (int)item.LocationX;
+                        var y = (j - (sample.Height / 2)) + (int)item.LocationY;
+
+                        if (x >= output.Width || y >= output.Height)
+                        {
+                            continue;
+                        }
+
+                        output.SetPixel(x, y, sample.GetPixel(i, j));
+                    }
+                }
+            }
+
+            output.Save(Path.Combine(InputFolder, "waterways.bmp"));
+
+            Console.WriteLine("done");
+            Console.Read();
+        }
+
+        // Load rivers
+        public static void Main(string[] args)
+        {
+            Console.WriteLine("Configurating");
+
+            var mileposts = JsonConvert.DeserializeObject<List<LinkedSerializedMilepost>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Mileposts_Named.json")));
+            var connections = JsonConvert.DeserializeObject<List<LinkedSerializedMilepostConnection>>(File.ReadAllText(Path.Combine(InputFolder, "Config_Connections.json")));
+            LinkMilepostConnections(mileposts, connections);
+            
+            var waterwayDirectory = Directory.GetFiles(Path.Combine(InputFolder, "Water"), "river_*.*");
+            var lakeImage = Path.Combine(InputFolder, "Water", "lakes_inlets.bmp");
+
+            foreach (var f in waterwayDirectory.Concat(new [] { lakeImage }))
+            {
+                using (var image = Image.FromFile(f))
+                {
+                    Bitmap bitmap;
+                    try
+                    {
+                        bitmap = new Bitmap(image);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Error loading " + f);
+                        continue;
+                    }
+
+                    using (bitmap)
+                    {
+                        var riverName = f.Split('\\', '_')
+                            .Last()
+                            .Split('.')
+                            .First();
+
+                        var isLakeRound = riverName == "inlets";
+
+                        Console.WriteLine("River {0}", riverName);
+                        var matchCount = 0;
+
+                        foreach (var c in connections)
+                        {
+                            var bluePixelCount = 0;
+                            foreach (var p in GenerateLinkPoints(c))
+                            {
+                                if (bitmap.GetPixel(p.Point.X, p.Point.Y).B > 200)
+                                {
+                                    ++bluePixelCount;
+                                }
+                            }
+
+                            if (bluePixelCount > 2)
+                            {
+                                if (isLakeRound)
+                                {
+                                    c.HasLakeOrInlet = true;
+                                }
+                                else
+                                {
+                                    if (c.RiversCrossed == null) c.RiversCrossed = new List<string>();
+                                    c.RiversCrossed.Add(riverName);
+                                }
+                                ++matchCount;
+                            }
+                        }
+
+                        if (isLakeRound)
+                        {
+                            Console.WriteLine("Found {0} lake/inlet crossings", matchCount);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Found {0} matches for river {1}", matchCount, riverName);
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine("Done with lakes and rivers, onto oceans");
+
+
+            var oceans = Directory.GetFiles(Path.Combine(InputFolder, "Water"), "ocean_*.*");
+            foreach (var o in oceans)
+            {
+                using (var image = Image.FromFile(o))
+                using (var bitmap = new Bitmap(image))
+                {
+                    var oceanName = o.Split('\\', '_')
+                        .Last()
+                        .Split('.')
+                        .First();
+
+                    switch (oceanName)
+                    {
+                        case "adriatic":
+                            oceanName = "Adriatic Sea";
+                            break;
+
+                        case "atlantic":
+                            oceanName = "Atlantic Ocean";
+                            break;
+
+                        case "baltic":
+                            oceanName = "Baltic Sea";
+                            break;
+
+                        case "englishChannel":
+                            oceanName = "English Channel";
+                            break;
+
+                        case "irish":
+                            oceanName = "Irish Sea";
+                            break;
+
+                        case "mediterranean":
+                            oceanName = "Mediterranean Sea";
+                            break;
+
+                        case "north":
+                            oceanName = "North Sea";
+                            break;
+
+                        default:
+                            throw new Exception("Couldn't name " + oceanName);
+                    }
+
+                    Console.WriteLine("Ocean {0}", oceanName);
+                    var count = 0;
+
+                    foreach (var m in mileposts)
+                    {
+                        if (bitmap.GetPixel((int)m.LocationX, (int)m.LocationY).B > 200)
+                        {
+                            m.Ocean = oceanName;
+                            ++count;
+                        }
+                    }
+
+                    Console.WriteLine("{0} cities on ocean {1}", count, oceanName);
+                }
+            }
+
+            File.WriteAllText(Path.Combine(InputFolder, "Config_Connections_Rivers.json"), JsonConvert.SerializeObject(connections));
+            File.WriteAllText(Path.Combine(InputFolder, "Config_Mileposts_Named_Oceans.json"), JsonConvert.SerializeObject(mileposts));
+           
+            Console.WriteLine("Done");
+            Console.Read();
+        }
+
+        private static void LinkMilepostConnections(List<LinkedSerializedMilepost> mileposts, List<LinkedSerializedMilepostConnection> links)
+        {
+            foreach (var l in links)
+            {
+                var m1 = mileposts.Single(a => a.Id == l.MilepostId1);
+                var m2 = mileposts.Single(a => a.Id == l.MilepostId2);
+
+                if (m1.Connections == null) m1.Connections = new List<SerializedMilepostConnection>();
+                if (m2.Connections == null) m2.Connections = new List<SerializedMilepostConnection>();
+
+                m1.Connections.Add(l);
+                m2.Connections.Add(l);
+
+                l.Milepost1 = m1;
+                l.Milepost2 = m2;
+            }
         }
 
         private static IEnumerable<ContextualPoint> GenerateLinkPoints(LinkedSerializedMilepostConnection link)
