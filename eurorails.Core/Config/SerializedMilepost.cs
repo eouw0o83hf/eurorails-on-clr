@@ -12,8 +12,11 @@ namespace eurorails.Core.Config
 
         public string Type { get; set; }
         public string Name { get; set; }
+
         public double LocationX { get; set; }
         public double LocationY { get; set; }
+
+        public string Ocean { get; set; }
     }
 
     public class SerializedMilepostConnection
@@ -22,6 +25,9 @@ namespace eurorails.Core.Config
 
         public Guid MilepostId1 { get; set; }
         public Guid MilepostId2 { get; set; }
+
+        public List<string> RiversCrossed { get; set; }
+        public bool HasLakeOrInlet { get; set; }
     }
 
     public class SerializedFerryConnection
