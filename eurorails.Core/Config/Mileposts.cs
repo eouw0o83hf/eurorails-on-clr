@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace eurorails.Core.Config
 {
-    public class Mileposts
+    public static class Mileposts
     {
         public static readonly ICollection<SerializedMilepost> Values;
 
@@ -25,41 +25,43 @@ namespace eurorails.Core.Config
                 Values = JsonConvert.DeserializeObject<ICollection<SerializedMilepost>>(result);
             }
         }
-    }
 
-    public class Connections
-    {
-        public static readonly ICollection<SerializedMilepostConnection> Values;
-
-        static Connections()
+        public static Milepost Convert(this SerializedMilepost input)
         {
-            var assembly = Assembly.GetAssembly(typeof(Mileposts));
-            const string resourceName = "eurorails.Core.Config.Config_Connections.json";
-
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
-            using (var reader = new StreamReader(stream))
+            Milepost response;
+            switch (input.Type)
             {
-                var result = reader.ReadToEnd();
-                Values = JsonConvert.DeserializeObject<ICollection<SerializedMilepostConnection>>(result);
+                case "Major City":
+                case "Major City Outpost":
+                    response = new MajorCity(input.Name);
+                    break;
+
+                case "Medium City":
+                    response = new MediumCity(input.Name);
+                    break;
+
+                case "Small City":
+                    response = new SmallCity(input.Name);
+                    break;
+
+                case "Mountain":
+                    response = new MountainMilepost();
+                    break;
+
+                case "Alpine":
+                    response = new AlpineMountainMilepost();
+                    break;
+
+                case "Milepost":
+                    response = new Milepost();
+                    break;
+
+                default:
+                    throw new InvalidDataException("Couldn't instantiate a Milepost of type " + input.Type);
             }
-        }
-    }
 
-    public class Ferries
-    {
-        public static readonly ICollection<SerializedFerryConnection> Values;
-
-        static Ferries()
-        {
-            var assembly = Assembly.GetAssembly(typeof(Mileposts));
-            const string resourceName = "eurorails.Core.Config.Config_Ferries.json";
-
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
-            using (var reader = new StreamReader(stream))
-            {
-                var result = reader.ReadToEnd();
-                Values = JsonConvert.DeserializeObject<ICollection<SerializedFerryConnection>>(result);
-            }
+            response.AdjacentBodyOfWater = input.Ocean;
+            return response;
         }
     }
 }

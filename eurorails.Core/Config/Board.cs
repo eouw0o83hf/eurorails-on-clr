@@ -8,6 +8,37 @@ namespace eurorails.Core.Config
 {
     public class Board
     {
-        public static readonly ICollection<Milepost> BoardMileposts = null;
+        public static readonly ICollection<Milepost> BoardMileposts;
+        public static readonly ICollection<River> Rivers;
+
+        static Board()
+        {
+            var milepostMap = Mileposts
+                                .Values
+                                .ToDictionary(a => a.Id, a => a.Convert());
+
+            Rivers = Connections
+                                .Values
+                                .Where(a => a.RiversCrossed != null)
+                                .SelectMany(a => a.RiversCrossed)
+                                .Distinct()
+                                .Select(a => new River
+                                {
+                                    Name = a
+                                })
+                                .ToList();
+
+            var connections = Connections
+                                .Values
+                                .Select(a => a.Import(milepostMap, Rivers))
+                                .ToList();
+
+            var ferries = Ferries
+                                .Values
+                                .Select(a => a.Import(milepostMap))
+                                .ToList();
+
+            BoardMileposts = milepostMap.Select(a => a.Value).ToList();
+        }
     }
 }

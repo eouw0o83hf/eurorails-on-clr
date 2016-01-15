@@ -45,5 +45,14 @@ namespace eurorails.Core.Test.Config
                 Assert.That(Mileposts.Values.Any(a => a.Id == f.MilepostId2));
             }
         }
+
+        [Test]
+        public void Mileposts_ShouldInstantiateCorrectly()
+        {
+            foreach (var m in Mileposts.Values)
+            {
+                Assert.DoesNotThrow(() => m.Convert());
+            }
+        }
     }
 }

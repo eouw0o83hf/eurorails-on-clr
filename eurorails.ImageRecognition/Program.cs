@@ -998,11 +998,12 @@ namespace eurorails.ImageRecognition
                 var y = link.Milepost1.LocationY + (Math.Sin(angle) * i);
 
                 var color = Color.LightGray;
-                if (handleRiver && i == distance / 2 - 1)
+                if (handleRiver && i == (int)distance / 2 - 1)
                 {
-                    for (var j = -2; j <= 2; ++j)
+                    const int riverPointRadius = 4;
+                    for (var j = -riverPointRadius; j <= riverPointRadius; ++j)
                     {
-                        for(var k = -2; k <= 2; ++k)
+                        for (var k = -riverPointRadius; k <= riverPointRadius; ++k)
                         {
                             yield return new ContextualPoint { Point = new Point((int)x + j, (int)y + k), Color = Color.LightSeaGreen };
                         }

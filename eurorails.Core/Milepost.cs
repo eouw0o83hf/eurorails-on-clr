@@ -8,15 +8,19 @@ namespace eurorails.Core
 {
     public class Milepost
     {
-        public ICollection<Milepost> AdjacentMileposts { get; set; }
-        public ICollection<string> AdjacentBodiesOfWater { get; set; }
+        public virtual int Cost { get { return 1; } }
+
+        public string AdjacentBodyOfWater { get; set; }
+        public ICollection<MilepostConnection> Connections { get; set; }
     }
 
     public class MountainMilepost : Milepost
     {
+        public override int Cost { get { return 2; } }
     }
 
     public class AlpineMountainMilepost : Milepost
     {
+        public override int Cost { get { return 5; } }
     }
 }

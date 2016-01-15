@@ -47,8 +47,10 @@
     <Compile Include="City.cs" />
     <Compile Include="Config\Board.cs" />
     <Compile Include="Config\CityResources.cs" />
+    <Compile Include="Config\Connections.cs" />
     <Compile Include="Config\DemandCards.cs" />
     <Compile Include="Config\EventCards.cs" />
+    <Compile Include="Config\Ferries.cs" />
     <Compile Include="Config\Mileposts.cs" />
     <Compile Include="Config\ResourceCounts.cs" />
     <Compile Include="Config\SerializedMilepost.cs" />
@@ -61,6 +63,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resource.cs" />
     <Compile Include="ResourceBank.cs" />
+    <Compile Include="River.cs" />
     <Compile Include="Train.cs" />
     <Compile Include="Turn.cs" />
   </ItemGroup>
